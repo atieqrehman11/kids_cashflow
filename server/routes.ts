@@ -5,12 +5,17 @@ import { insertAccountSchema, insertTransactionSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok" });
+  });
+
   // Account routes
   app.get("/api/accounts", async (req, res) => {
     try {
       const accounts = await storage.getAllAccounts();
       res.json(accounts);
     } catch (error) {
+      console.error("❌ API error:", error);
       res.status(500).json({ message: "Failed to fetch accounts" });
     }
   });

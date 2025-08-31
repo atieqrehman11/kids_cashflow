@@ -33,5 +33,12 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:3000",  // your server port
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 });
