@@ -1,5 +1,6 @@
-import { type User, type InsertUser, type Account, type InsertAccount, type Transaction, type InsertTransaction } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { users, accounts, transactions, type User, type InsertUser, type Account, type InsertAccount, type Transaction, type InsertTransaction } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   // User methods (existing)
@@ -22,119 +23,99 @@ export interface IStorage {
   getRecentTransactions(limit?: number): Promise<Transaction[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private accounts: Map<string, Account>;
-  private transactions: Map<string, Transaction>;
-
-  constructor() {
-    this.users = new Map();
-    this.accounts = new Map();
-    this.transactions = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
   // User methods (existing)
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   // Account methods
   async getAllAccounts(): Promise<Account[]> {
-    return Array.from(this.accounts.values()).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    return await db.select().from(accounts).orderBy(desc(accounts.createdAt));
   }
 
   async getAccount(id: string): Promise<Account | undefined> {
-    return this.accounts.get(id);
+    const [account] = await db.select().from(accounts).where(eq(accounts.id, id));
+    return account || undefined;
   }
 
   async createAccount(insertAccount: InsertAccount): Promise<Account> {
-    const id = randomUUID();
-    const account: Account = {
-      ...insertAccount,
-      id,
-      balance: insertAccount.balance || "0.00",
-      createdAt: new Date(),
-    };
-    this.accounts.set(id, account);
+    const [account] = await db
+      .insert(accounts)
+      .values(insertAccount)
+      .returning();
     return account;
   }
 
   async updateAccount(id: string, updateData: Partial<InsertAccount>): Promise<Account | undefined> {
-    const account = this.accounts.get(id);
-    if (!account) return undefined;
-    
-    const updatedAccount = { ...account, ...updateData };
-    this.accounts.set(id, updatedAccount);
-    return updatedAccount;
+    const [account] = await db
+      .update(accounts)
+      .set(updateData)
+      .where(eq(accounts.id, id))
+      .returning();
+    return account || undefined;
   }
 
   async deleteAccount(id: string): Promise<boolean> {
-    const deleted = this.accounts.delete(id);
-    if (deleted) {
-      // Also delete all transactions for this account
-      const accountTransactions = Array.from(this.transactions.entries())
-        .filter(([, transaction]) => transaction.accountId === id);
-      accountTransactions.forEach(([transactionId]) => {
-        this.transactions.delete(transactionId);
-      });
-    }
-    return deleted;
+    // First delete all transactions for this account
+    await db.delete(transactions).where(eq(transactions.accountId, id));
+    
+    // Then delete the account
+    const result = await db.delete(accounts).where(eq(accounts.id, id));
+    return result.rowCount !== undefined && result.rowCount > 0;
   }
 
   async updateAccountBalance(id: string, newBalance: string): Promise<Account | undefined> {
-    const account = this.accounts.get(id);
-    if (!account) return undefined;
-    
-    const updatedAccount = { ...account, balance: newBalance };
-    this.accounts.set(id, updatedAccount);
-    return updatedAccount;
+    const [account] = await db
+      .update(accounts)
+      .set({ balance: newBalance })
+      .where(eq(accounts.id, id))
+      .returning();
+    return account || undefined;
   }
 
   // Transaction methods
   async getAllTransactions(): Promise<Transaction[]> {
-    return Array.from(this.transactions.values()).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    return await db.select().from(transactions).orderBy(desc(transactions.createdAt));
   }
 
   async getTransactionsByAccount(accountId: string): Promise<Transaction[]> {
-    return Array.from(this.transactions.values())
-      .filter(transaction => transaction.accountId === accountId)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return await db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.accountId, accountId))
+      .orderBy(desc(transactions.createdAt));
   }
 
   async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
-    const id = randomUUID();
-    const transaction: Transaction = {
-      ...insertTransaction,
-      id,
-      createdAt: new Date(),
-    };
-    this.transactions.set(id, transaction);
+    const [transaction] = await db
+      .insert(transactions)
+      .values(insertTransaction)
+      .returning();
     return transaction;
   }
 
   async getRecentTransactions(limit: number = 10): Promise<Transaction[]> {
-    const allTransactions = Array.from(this.transactions.values()).sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    return allTransactions.slice(0, limit);
+    return await db
+      .select()
+      .from(transactions)
+      .orderBy(desc(transactions.createdAt))
+      .limit(limit);
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
