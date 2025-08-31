@@ -88,10 +88,10 @@ export default function CreateAccountModal({ isOpen, onClose }: CreateAccountMod
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="name">Child's Name</Label>
+            <Label htmlFor="name">Name</Label>
             <Input
               id="name"
-              placeholder="Enter child's name"
+              placeholder="Enter name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               data-testid="input-account-name"

@@ -17,7 +17,7 @@ export default function AccountsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-foreground">All Accounts</h1>
-          <p className="text-muted-foreground mt-1">Manage all kids' accounts</p>
+          <p className="text-muted-foreground mt-1">Manage all accounts</p>
         </div>
         <Button 
           onClick={() => setIsCreateModalOpen(true)}
@@ -58,7 +58,7 @@ export default function AccountsPage() {
           <div className="col-span-full bg-card rounded-xl border border-border shadow-sm p-12 text-center">
             <i className="fas fa-piggy-bank text-4xl text-muted-foreground mb-4"></i>
             <h3 className="text-lg font-semibold text-foreground mb-2">No accounts yet</h3>
-            <p className="text-muted-foreground mb-4">Get started by creating your first kid's account</p>
+            <p className="text-muted-foreground mb-4">Get started by creating your first account</p>
             <Button onClick={() => setIsCreateModalOpen(true)} data-testid="button-create-first-account">
               <i className="fas fa-plus mr-2"></i>Create Account
             </Button>

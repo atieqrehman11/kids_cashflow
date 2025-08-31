@@ -13,7 +13,7 @@ export default function Layout({ children }: LayoutProps) {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
               <i className="fas fa-piggy-bank text-primary text-2xl"></i>
-              <h1 className="text-xl font-bold text-foreground">Kids Account Manager</h1>
+              <h1 className="text-xl font-bold text-foreground">Cash Flow Manager</h1>
             </div>
             <Navigation />
             <button className="md:hidden" data-testid="button-mobile-menu">
