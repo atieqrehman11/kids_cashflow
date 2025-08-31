@@ -16,38 +16,7 @@ export default function Dashboard() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-card border-b border-border shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <i className="fas fa-piggy-bank text-primary text-2xl"></i>
-              <h1 className="text-xl font-bold text-foreground">Kids Account Manager</h1>
-            </div>
-            <nav className="hidden md:flex space-x-8">
-              <button className="text-primary font-medium border-b-2 border-primary pb-4" data-testid="nav-dashboard">
-                Dashboard
-              </button>
-              <button className="text-muted-foreground hover:text-foreground pb-4" data-testid="nav-accounts">
-                Accounts
-              </button>
-              <button className="text-muted-foreground hover:text-foreground pb-4" data-testid="nav-transactions">
-                Transactions
-              </button>
-              <button className="text-muted-foreground hover:text-foreground pb-4" data-testid="nav-reports">
-                Reports
-              </button>
-            </nav>
-            <button className="md:hidden" data-testid="button-mobile-menu">
-              <i className="fas fa-bars text-xl"></i>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Dashboard Overview */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
@@ -114,7 +83,6 @@ export default function Dashboard() {
           <TransactionForm accounts={accounts} />
           <RecentTransactions />
         </div>
-      </main>
 
       {/* Create Account Modal */}
       <CreateAccountModal 

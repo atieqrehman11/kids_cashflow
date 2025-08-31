@@ -7,8 +7,7 @@ interface TransactionWithAccount extends Transaction {
 
 export default function RecentTransactions() {
   const { data: transactions = [], isLoading } = useQuery<Transaction[]>({
-    queryKey: ["/api/transactions"],
-    queryParams: { limit: 10 },
+    queryKey: ["/api/transactions", { limit: 10 }],
   });
 
   const { data: accounts = [] } = useQuery<Account[]>({
@@ -16,7 +15,7 @@ export default function RecentTransactions() {
   });
 
   // Combine transaction data with account names
-  const transactionsWithAccounts: TransactionWithAccount[] = transactions.map(transaction => ({
+  const transactionsWithAccounts: TransactionWithAccount[] = transactions.map((transaction: Transaction) => ({
     ...transaction,
     account: accounts.find(acc => acc.id === transaction.accountId)
   }));
