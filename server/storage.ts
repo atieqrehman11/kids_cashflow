@@ -7,7 +7,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   // Account methods
   getAllAccounts(): Promise<Account[]>;
   getAccount(id: string): Promise<Account | undefined>;
@@ -15,7 +15,7 @@ export interface IStorage {
   updateAccount(id: string, account: Partial<InsertAccount>): Promise<Account | undefined>;
   deleteAccount(id: string): Promise<boolean>;
   updateAccountBalance(id: string, newBalance: string): Promise<Account | undefined>;
-  
+
   // Transaction methods
   getAllTransactions(): Promise<Transaction[]>;
   getTransactionsByAccount(accountId: string): Promise<Transaction[]>;
@@ -44,31 +44,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Account methods
+  async createAccount(account: InsertAccount): Promise<Account> {
+    const [newAccount] = await db
+      .insert(accounts)
+      .values(account)
+      .returning();
+    return newAccount;
+  }
+
+  async updateAccount(id: string, account: Partial<InsertAccount>): Promise<Account | undefined> {
+    const [updatedAccount] = await db
+      .update(accounts)
+      .set(account)
+      .where(eq(accounts.id, id))
+      .returning();
+    return updatedAccount || undefined;
+  }
+
   async getAllAccounts(): Promise<Account[]> {
-    var result = await db.select().from(accounts); //.orderBy(desc(accounts.createdAt));
-    console.log(result)
-    return result
+    return db.select().from(accounts).orderBy(desc(accounts.createdAt));
   }
 
   async getAccount(id: string): Promise<Account | undefined> {
     const [account] = await db.select().from(accounts).where(eq(accounts.id, id));
-    return account || undefined;
-  }
-
-  async createAccount(insertAccount: InsertAccount): Promise<Account> {
-    const [account] = await db
-      .insert(accounts)
-      .values(insertAccount)
-      .returning();
-    return account;
-  }
-
-  async updateAccount(id: string, updateData: Partial<InsertAccount>): Promise<Account | undefined> {
-    const [account] = await db
-      .update(accounts)
-      .set(updateData)
-      .where(eq(accounts.id, id))
-      .returning();
     return account || undefined;
   }
 
@@ -78,7 +76,7 @@ export class DatabaseStorage implements IStorage {
     
     // Then delete the account
     const result = await db.delete(accounts).where(eq(accounts.id, id));
-    return result.rowCount !== undefined && result.rowCount > 0;
+    return result.rowCount !== undefined && result.rowCount !== null && result.rowCount > 0;
   }
 
   async updateAccountBalance(id: string, newBalance: string): Promise<Account | undefined> {
@@ -92,11 +90,11 @@ export class DatabaseStorage implements IStorage {
 
   // Transaction methods
   async getAllTransactions(): Promise<Transaction[]> {
-    return await db.select().from(transactions).orderBy(desc(transactions.createdAt));
+    return db.select().from(transactions).orderBy(desc(transactions.createdAt));
   }
 
   async getTransactionsByAccount(accountId: string): Promise<Transaction[]> {
-    return await db
+    return db
       .select()
       .from(transactions)
       .where(eq(transactions.accountId, accountId))

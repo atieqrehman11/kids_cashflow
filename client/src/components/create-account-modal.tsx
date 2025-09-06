@@ -19,9 +19,11 @@ interface CreateAccountModalProps {
 
 export default function CreateAccountModal({ isOpen, onClose }: CreateAccountModalProps) {
   const [name, setName] = useState("");
-  const [age, setAge] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [initialBalance, setInitialBalance] = useState("");
-  
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -29,10 +31,12 @@ export default function CreateAccountModal({ isOpen, onClose }: CreateAccountMod
     mutationFn: async () => {
       const accountData = {
         name: name.trim(),
-        age: parseInt(age),
+        dateOfBirth: new Date(dateOfBirth), // Convert to Date object
         balance: initialBalance ? parseFloat(initialBalance).toFixed(2) : "0.00",
+        email: email.trim(),
+        password: password.trim(),
       };
-      
+
       const response = await apiRequest("POST", "/api/accounts", accountData);
       return response.json();
     },
@@ -53,8 +57,10 @@ export default function CreateAccountModal({ isOpen, onClose }: CreateAccountMod
 
   const handleClose = () => {
     setName("");
-    setAge("");
+    setDateOfBirth("");
     setInitialBalance("");
+    setEmail("");
+    setPassword("");
     onClose();
   };
 
@@ -65,14 +71,39 @@ export default function CreateAccountModal({ isOpen, onClose }: CreateAccountMod
       toast({ title: "Please enter a name", variant: "destructive" });
       return;
     }
-    
-    if (!age || parseInt(age) < 1 || parseInt(age) > 18) {
-      toast({ title: "Please enter a valid age (1-18)", variant: "destructive" });
+
+    if (!dateOfBirth || !dateOfBirth.trim()) {
+      toast({ title: "Please enter a valid date of birth", variant: "destructive" });
+      return;
+    }
+
+    const enteredDate = new Date(dateOfBirth);
+    if (Number.isNaN(enteredDate.getTime())) {
+      toast({ title: "Invalid date format", variant: "destructive" });
+      return;
+    }
+
+    const currentDate = new Date();
+    const fiveYearsAgo = new Date();
+    fiveYearsAgo.setFullYear(currentDate.getFullYear() - 5);
+
+    if (enteredDate > fiveYearsAgo) {
+      toast({ title: "Date of birth must be at least 5 years before today", variant: "destructive" });
       return;
     }
 
     if (initialBalance && parseFloat(initialBalance) < 0) {
       toast({ title: "Initial balance cannot be negative", variant: "destructive" });
+      return;
+    }
+
+    if (!email.trim()) {
+      toast({ title: "Please enter an email", variant: "destructive" });
+      return;
+    }
+
+    if (!password.trim()) {
+      toast({ title: "Please enter a password", variant: "destructive" });
       return;
     }
 
@@ -99,16 +130,14 @@ export default function CreateAccountModal({ isOpen, onClose }: CreateAccountMod
           </div>
 
           <div>
-            <Label htmlFor="age">Age</Label>
+            <Label htmlFor="dateOfBirth">Date of Birth</Label>
             <Input
-              id="age"
-              type="number"
-              min="1"
-              max="18"
-              placeholder="Age"
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              data-testid="input-account-age"
+              id="dateOfBirth"
+              type="date"
+              placeholder="YYYY-MM-DD"
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              data-testid="input-account-dateOfBirth"
             />
           </div>
 
@@ -127,6 +156,30 @@ export default function CreateAccountModal({ isOpen, onClose }: CreateAccountMod
                 data-testid="input-initial-balance"
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="Enter email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              data-testid="input-account-email"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="Enter password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              data-testid="input-account-password"
+            />
           </div>
 
           <div className="flex space-x-3 pt-4">

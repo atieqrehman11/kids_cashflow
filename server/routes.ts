@@ -28,20 +28,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(account);
     } catch (error) {
+      console.error("❌ API error:", error);
       res.status(500).json({ message: "Failed to fetch account" });
     }
   });
 
   app.post("/api/accounts", async (req, res) => {
     try {
-      const validatedData = insertAccountSchema.parse(req.body);
-      const account = await storage.createAccount(validatedData);
-      res.status(201).json(account);
+      const accountData = insertAccountSchema.parse(req.body);
+      const newAccount = await storage.createAccount(accountData);
+      res.status(201).json(newAccount);
     } catch (error) {
+      console.error("❌ API error:", error);
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid account data", errors: error.errors });
+        res.status(400).json({ message: "Validation error", errors: error.errors });
+      } else {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        res.status(500).json({ message: "Failed to create account", error: errorMessage });
       }
-      res.status(500).json({ message: "Failed to create account" });
     }
   });
 
@@ -54,10 +58,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(account);
     } catch (error) {
+      console.error("❌ API error:", error);
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid account data", errors: error.errors });
+        res.status(400).json({ message: "Validation error", errors: error.errors });
+      } else {
+        res.status(500).json({ message: "Failed to update account" });
       }
-      res.status(500).json({ message: "Failed to update account" });
     }
   });
 
@@ -69,6 +75,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json({ message: "Account deleted successfully" });
     } catch (error) {
+      console.error("❌ API error:", error);
       res.status(500).json({ message: "Failed to delete account" });
     }
   });
@@ -78,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { accountId, limit } = req.query;
       let transactions;
-      
+
       if (accountId) {
         transactions = await storage.getTransactionsByAccount(accountId as string);
       } else if (limit) {
@@ -86,9 +93,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         transactions = await storage.getAllTransactions();
       }
-      
+
       res.json(transactions);
     } catch (error) {
+      console.error("❌ API error:", error);
       res.status(500).json({ message: "Failed to fetch transactions" });
     }
   });
@@ -96,7 +104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/transactions", async (req, res) => {
     try {
       const validatedData = insertTransactionSchema.parse(req.body);
-      
+
       // Get the account to check balance for debit transactions
       const account = await storage.getAccount(validatedData.accountId);
       if (!account) {
@@ -142,8 +150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const accounts = await storage.getAllAccounts();
       const totalBalance = accounts.reduce((sum, account) => sum + parseFloat(account.balance), 0);
-      
-      // Calculate this month's transactions
+
       const now = new Date();
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
       const allTransactions = await storage.getAllTransactions();
@@ -158,13 +165,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         totalAccounts: accounts.length,
         totalBalance: totalBalance.toFixed(2),
-        monthlyTransactions: Math.abs(monthlyAmount).toFixed(2)
+        monthlyTransactions: Math.abs(monthlyAmount).toFixed(2),
       });
     } catch (error) {
+      console.error("❌ API error:", error);
       res.status(500).json({ message: "Failed to fetch dashboard stats" });
     }
   });
 
-  const httpServer = createServer(app);
-  return httpServer;
+  return createServer(app);
 }
