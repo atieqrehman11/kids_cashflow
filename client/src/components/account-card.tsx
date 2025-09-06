@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { format } from "date-fns";
 
 interface AccountCardProps {
   account: Account;
@@ -132,7 +133,7 @@ export default function AccountCard({ account }: AccountCardProps) {
                 {account.name}'s Account
               </h3>
               <p className="text-sm text-muted-foreground" data-testid={`text-age-${account.id}`}>
-                Age {account.age}
+                Date of Birth: {format(new Date(account.dateOfBirth), "MMM dd yyyy")}
               </p>
             </div>
           </div>

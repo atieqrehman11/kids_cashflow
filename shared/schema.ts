@@ -1,13 +1,15 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, decimal, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, decimal, timestamp, integer, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const accounts = pgTable("accounts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  age: integer("age").notNull(),
+  dateOfBirth: date("date_of_birth").notNull(), // Changed from timestamp to date
   balance: decimal("balance", { precision: 10, scale: 2 }).default("0.00").notNull(),
+  email: text("email").notNull(),
+  password: text("password").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
